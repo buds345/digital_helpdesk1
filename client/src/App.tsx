@@ -7,9 +7,13 @@ import Layout from './components/common/Layout';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
-// ✅ New email verification pages
+// ✅ Email verification pages
 import EmailVerification from './pages/auth/EmailVerification';
 import ResendVerification from './pages/auth/ResendVerification';
+
+// ✅ NEW: Forgot Password pages
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // ✅ Dashboards
 import ClientDashboard from './pages/auth/dashboard/ClientDashboard';
@@ -48,6 +52,10 @@ const App: React.FC = () => (
                     {/* ✅ Email verification routes */}
                     <Route path="/verify-email" element={<EmailVerification />} />
                     <Route path="/resend-verification" element={<ResendVerification />} />
+
+                    {/* ✅ NEW: Forgot Password routes */}
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
                     {/* Protected routes wrapped with Layout */}
                     <Route element={<Layout />}>

@@ -4,6 +4,8 @@ import { User } from "../entities/user";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { emailService } from "../services/emailService";
+import crypto from "crypto";
+import { MoreThan } from "typeorm";
 
 const userRepo = AppDataSource.getRepository(User);
 
@@ -103,7 +105,6 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
-// Update your verifyEmail function in auth.controller.ts
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
         const { token } = req.body;
@@ -164,5 +165,107 @@ export const verifyEmail = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("❌ Email verification error:", error);
         return res.status(500).json({ message: "Server error during verification" });
+    }
+};
+
+
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await userRepo.findOne({ where: { email } });
+
+        // For security, don't reveal if email exists
+        if (!user) {
+            return res.status(200).json({
+                message: "If this email exists, a password reset link has been sent"
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+        // Save token to user
+        user.resetToken = resetToken;
+        user.resetTokenExpiry = resetTokenExpiry;
+        await userRepo.save(user);
+
+        // Send email with reset link
+        const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+        try {
+            await emailService.sendPasswordResetEmail(email, user.name, resetLink);
+
+            res.status(200).json({
+                message: "If this email exists, a password reset link has been sent"
+            });
+        } catch (emailError) {
+            console.error("Email sending error:", emailError);
+            res.status(500).json({ message: "Error sending reset email" });
+        }
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                message: "Token and new password are required"
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                message: "Password must be at least 8 characters long"
+            });
+        }
+
+        // Try to find user with exact token match first
+        let user = await userRepo.findOne({
+            where: {
+                resetToken: token,
+                resetTokenExpiry: MoreThan(new Date())
+            }
+        });
+
+        // If not found, try to extract token from URL format
+        if (!user && token.includes('reset-password?token=')) {
+            const extractedToken = token.split('token=')[1];
+            user = await userRepo.findOne({
+                where: {
+                    resetToken: extractedToken,
+                    resetTokenExpiry: MoreThan(new Date())
+                }
+            });
+        }
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired reset token" });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password and clear reset token
+        user.password = hashedPassword;
+        user.resetToken = null;
+        user.resetTokenExpiry = null;
+        await userRepo.save(user);
+
+        res.status(200).json({ message: "Password reset successfully" });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };

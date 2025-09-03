@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import {
     login as apiLogin,
     register as apiRegister,
+    forgotPassword as apiForgotPassword,
+    resetPassword as apiResetPassword,
 } from "../api/auth.api";
 import {
     User,
@@ -19,6 +21,8 @@ interface AuthContextType {
     token: string | null;
     login: (email: string, password: string) => Promise<AuthUser>;
     register: (userData: RegisterUserData) => Promise<RegisterResponse>;
+    forgotPassword: (email: string) => Promise<{ message: string; emailSent: boolean }>;
+    resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
     logout: () => void;
     isAuthenticated: boolean;
     loading: boolean;
@@ -101,6 +105,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    // FORGOT PASSWORD
+    const forgotPassword = async (email: string): Promise<{ message: string; emailSent: boolean }> => {
+        setError(null);
+        setLoading(true);
+        try {
+            const response = await apiForgotPassword(email);
+            return response;
+        } catch (err: any) {
+            console.error("Forgot password error:", err);
+            const backendMessage =
+                err?.response?.data?.error ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Failed to send reset email";
+            setError(backendMessage);
+            throw new Error(backendMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // RESET PASSWORD
+    const resetPassword = async (token: string, newPassword: string): Promise<{ message: string }> => {
+        setError(null);
+        setLoading(true);
+        try {
+            const response = await apiResetPassword(token, newPassword);
+            return response;
+        } catch (err: any) {
+            console.error("Reset password error:", err);
+            const backendMessage =
+                err?.response?.data?.error ||
+                err?.response?.data?.message ||
+                err?.message ||
+                "Failed to reset password";
+            setError(backendMessage);
+            throw new Error(backendMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // LOGOUT
     const logout = (): void => {
         localStorage.removeItem("token");
@@ -148,6 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 token,
                 login,
                 register,
+                forgotPassword,
+                resetPassword,
                 logout,
                 isAuthenticated,
                 loading,

@@ -1,12 +1,13 @@
+// src/pages/StaffLogin.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Typography, TextField, Button, Link, Alert, Box } from "@mui/material";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { useAuth } from "../../contexts/AuthContext";
-import AuthBackground from '../../components/auth/AuthBackground';
+import { useAuth } from "../contexts/AuthContext";
+import AuthBackground from '../components/auth/AuthBackground';
 
-const Login: React.FC = () => {
+const StaffLogin: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [error, setError] = useState("");
@@ -30,6 +31,12 @@ const Login: React.FC = () => {
         try {
             const authUser = await login(values.email, values.password);
 
+            // Ensure only staff can login here
+            if (authUser.user.role === "client") {
+                setError("This login is for staff members only. Clients should use the client login.");
+                return;
+            }
+
             // Redirect to role-specific dashboard
             switch (authUser.user.role) {
                 case "admin":
@@ -39,7 +46,7 @@ const Login: React.FC = () => {
                     navigate("/support-dashboard");
                     break;
                 default:
-                    navigate("/client-dashboard");
+                    navigate("/staff-dashboard");
                     break;
             }
         } catch (err: any) {
@@ -57,10 +64,6 @@ const Login: React.FC = () => {
 
     const handleResendVerification = () => {
         navigate(`/resend-verification?email=${encodeURIComponent(userEmail)}`);
-    };
-
-    const handleForgotPassword = () => {
-        navigate("/forgot-password");
     };
 
     return (
@@ -83,17 +86,13 @@ const Login: React.FC = () => {
                 >
                     SM SOLUTIONS
                 </Typography>
-                <Typography
-                    variant="subtitle1"
-                    color="text.secondary"
-                    sx={{ fontStyle: 'italic' }}
-                >
-
+                <Typography variant="h5" color="text.secondary">
+                    Staff Portal
                 </Typography>
             </Box>
 
             <Typography variant="h4" gutterBottom align="center">
-                Login
+                Staff Login
             </Typography>
 
             {error && (
@@ -126,7 +125,7 @@ const Login: React.FC = () => {
                         <Field
                             as={TextField}
                             name="email"
-                            label="Email"
+                            label="Staff Email"
                             fullWidth
                             margin="normal"
                             variant="outlined"
@@ -146,35 +145,22 @@ const Login: React.FC = () => {
                         />
                         <ErrorMessage name="password" component="div" />
 
-                        <Box sx={{ textAlign: 'right', mb: 2 }}>
-                            <Link
-                                component="button"
-                                type="button"
-                                onClick={handleForgotPassword}
-                                underline="hover"
-                                variant="body2"
-                                sx={{ color: 'primary.main' }}
-                            >
-                                Forgot Password?
-                            </Link>
-                        </Box>
-
                         <Button
                             type="submit"
                             variant="contained"
                             color="primary"
                             disabled={isSubmitting}
                             fullWidth
-                            sx={{ mt: 1 }}
+                            sx={{ mt: 2 }}
                         >
-                            {isSubmitting ? "Logging in..." : "Login"}
+                            {isSubmitting ? "Logging in..." : "Login as Staff"}
                         </Button>
 
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Typography variant="body2">
-                                Don't have an account?{" "}
-                                <Link href="/register" underline="hover">
-                                    Register
+                                Are you a client?{" "}
+                                <Link href="/client-login" underline="hover">
+                                    Client Login
                                 </Link>
                             </Typography>
 
@@ -199,4 +185,4 @@ const Login: React.FC = () => {
     );
 };
 
-export default Login;
+export default StaffLogin;

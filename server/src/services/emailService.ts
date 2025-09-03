@@ -28,17 +28,47 @@ export class EmailService {
     return crypto.randomBytes(32).toString('hex');
   }
 
+  async testEmailConnection(): Promise<boolean> {
+    try {
+      await this.transporter.verify();
+      console.log('Email service connection verified');
+      return true;
+    } catch (error) {
+      console.error('Email service connection failed:', error);
+      return false;
+    }
+  }
+
+  async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<void> {
+    const resetLink = `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset Request - SM Solutions',
+      html: this.getPasswordResetTemplate(name, resetLink),
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Password reset email sent to ${email}`);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      throw new Error('Failed to send password reset email');
+    }
+  }
+
   async sendVerificationEmail(
     email: string,
     name: string,
     verificationToken: string
   ): Promise<void> {
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
 
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your Email - Digital Help Desk',
+      subject: 'Verify Your Email - SM Solutions',
       html: this.getVerificationEmailTemplate(name, verificationUrl),
     };
 
@@ -55,7 +85,7 @@ export class EmailService {
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
-      subject: 'Welcome to SM Digital Help Desk!',
+      subject: 'Welcome to SM Solutions!',
       html: this.getWelcomeEmailTemplate(name),
     };
 
@@ -76,7 +106,7 @@ export class EmailService {
     priority: string,
     clientName: string
   ): Promise<void> {
-    const dashboardUrl = `${process.env.FRONTEND_URL}/dashboard/tickets/${ticketId}`;
+    const dashboardUrl = `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/tickets/${ticketId}`;
 
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
@@ -116,18 +146,101 @@ export class EmailService {
     }
   }
 
-  private getPriorityIcon(priority: string): string {
-    switch (priority.toLowerCase()) {
-      case 'high':
-      case 'critical':
-        return '🔥';
-      case 'medium':
-        return '⚡';
-      case 'low':
-        return '📋';
-      default:
-        return '📋';
-    }
+  private getPasswordResetTemplate(name: string, resetLink: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset Request</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+          .header { 
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+            border-radius: 8px 8px 0 0;
+          }
+          .content { 
+            padding: 30px; 
+            background: white; 
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .button { 
+            display: inline-block; 
+            background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+            color: white; 
+            padding: 14px 30px; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+          }
+          .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: #856404;
+          }
+          .footer { 
+            padding: 20px; 
+            text-align: center; 
+            color: #666; 
+            font-size: 12px;
+            background: #f8f9fa;
+            margin-top: 20px;
+            border-radius: 8px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Password Reset Request</h1>
+            <p style="margin: 0; opacity: 0.9;">We received a request to reset your password</p>
+          </div>
+          
+          <div class="content">
+            <h2>Hi ${name}!</h2>
+            <p>We received a request to reset your password for your SM Solutions account.</p>
+            <p>If you made this request, click the button below to reset your password:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" class="button">Reset My Password</a>
+            </div>
+            
+            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #1976d2; background: #f0f8ff; padding: 10px; border-radius: 4px;">${resetLink}</p>
+            
+            <div class="warning-box">
+              <strong>Important Security Information:</strong>
+              <ul style="margin: 10px 0 0 0;">
+                <li>This password reset link will expire in <strong>1 hour</strong></li>
+                <li>If you didn't request this password reset, please ignore this email</li>
+                <li>Your password will remain unchanged if you don't click the link</li>
+              </ul>
+            </div>
+            
+            <p>If you continue to have problems, please contact our support team.</p>
+            
+            <p>Best regards,<br><strong>SM Solutions Team</strong></p>
+          </div>
+          
+          <div class="footer">
+            <p>&copy; 2025 SM Solutions. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   }
 
   private getVerificationEmailTemplate(name: string, verificationUrl: string): string {
@@ -158,11 +271,11 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Digital Help Desk</h1>
+            <h1>SM Solutions</h1>
           </div>
           <div class="content">
             <h2>Hi ${name}!</h2>
-            <p>Thank you for registering with Digital Help Desk. To complete your registration, please verify your email address by clicking the button below:</p>
+            <p>Thank you for registering with SM Solutions. To complete your registration, please verify your email address by clicking the button below:</p>
             <div style="text-align: center;">
               <a href="${verificationUrl}" class="button">Verify Email Address</a>
             </div>
@@ -172,7 +285,7 @@ export class EmailService {
             <p>If you didn't create an account with us, please ignore this email.</p>
           </div>
           <div class="footer">
-            <p>© 2025 Digital Help Desk. All rights reserved.</p>
+            <p>&copy; 2025 SM Solutions. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -187,7 +300,7 @@ export class EmailService {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to Digital Help Desk</title>
+        <title>Welcome to SM Solutions</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -199,7 +312,7 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Welcome to SM Digital Help Desk! 🎉</h1>
+            <h1>Welcome to SM Solutions!</h1>
           </div>
           <div class="content">
             <h2>Hi ${name}!</h2>
@@ -214,7 +327,7 @@ export class EmailService {
             <p>Welcome aboard!</p>
           </div>
           <div class="footer">
-            <p>© 2025 Digital Help Desk. All rights reserved.</p>
+            <p>&copy; 2025 SM Solutions. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -232,7 +345,6 @@ export class EmailService {
     dashboardUrl: string
   ): string {
     const priorityColor = this.getPriorityColor(priority);
-    const priorityIcon = this.getPriorityIcon(priority);
 
     return `
       <!DOCTYPE html>
@@ -285,27 +397,6 @@ export class EmailService {
             margin: 20px 0;
             font-weight: bold;
             text-align: center;
-            transition: all 0.3s ease;
-          }
-          .button:hover { transform: translateY(-2px); }
-          .info-grid {
-            display: table;
-            width: 100%;
-            margin: 15px 0;
-          }
-          .info-row {
-            display: table-row;
-          }
-          .info-label {
-            display: table-cell;
-            font-weight: bold;
-            padding: 5px 15px 5px 0;
-            width: 100px;
-            color: #666;
-          }
-          .info-value {
-            display: table-cell;
-            padding: 5px 0;
           }
           .description-box {
             background: #fff;
@@ -337,45 +428,29 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎫 New Ticket Assigned</h1>
+            <h1>New Ticket Assigned</h1>
             <p style="margin: 0; opacity: 0.9;">You have been assigned a new support ticket</p>
           </div>
           
           <div class="content">
-            <h2>Hi ${staffName}! 👋</h2>
+            <h2>Hi ${staffName}!</h2>
             <p>A new ticket has been assigned to you. Here are the details:</p>
             
             <div class="ticket-info">
-              <div class="priority-badge">${priorityIcon} ${priority.toUpperCase()} PRIORITY</div>
+              <div class="priority-badge">${priority.toUpperCase()} PRIORITY</div>
               
-              <div class="info-grid">
-                <div class="info-row">
-                  <div class="info-label">Ticket ID:</div>
-                  <div class="info-value"><strong>#${ticketId}</strong></div>
-                </div>
-                <div class="info-row">
-                  <div class="info-label">Title:</div>
-                  <div class="info-value"><strong>${ticketTitle}</strong></div>
-                </div>
-                <div class="info-row">
-                  <div class="info-label">Client:</div>
-                  <div class="info-value">${clientName}</div>
-                </div>
-                <div class="info-row">
-                  <div class="info-label">Priority:</div>
-                  <div class="info-value" style="color: ${priorityColor}; font-weight: bold;">${priority.charAt(0).toUpperCase() + priority.slice(1)}</div>
-                </div>
-              </div>
+              <p><strong>Ticket ID:</strong> #${ticketId}</p>
+              <p><strong>Title:</strong> ${ticketTitle}</p>
+              <p><strong>Client:</strong> ${clientName}</p>
+              <p><strong>Priority:</strong> <span style="color: ${priorityColor}; font-weight: bold;">${priority.charAt(0).toUpperCase() + priority.slice(1)}</span></p>
               
-              <div style="margin-top: 15px;">
-                <strong>Description:</strong>
-                <div class="description-box">${ticketDescription}</div>
-              </div>
+              <p><strong>Description:</strong></p>
+              <div class="description-box">${ticketDescription}</div>
             </div>
 
             ${priority.toLowerCase() === 'high' || priority.toLowerCase() === 'critical' ? `
             <div class="urgent-notice">
-              <strong>⚠️ High Priority Ticket</strong><br>
+              <strong>High Priority Ticket</strong><br>
               This ticket requires immediate attention. Please review and respond as soon as possible.
             </div>
             ` : ''}
@@ -394,11 +469,11 @@ export class EmailService {
             
             <p>If you have any questions about this assignment, please contact your administrator.</p>
             
-            <p>Best regards,<br><strong>Digital Help Desk Team</strong></p>
+            <p>Best regards,<br><strong>SM Solutions Team</strong></p>
           </div>
           
           <div class="footer">
-            <p>© 2025 Digital Help Desk. All rights reserved.</p>
+            <p>&copy; 2025 SM Solutions. All rights reserved.</p>
             <p>This is an automated notification. Please do not reply to this email.</p>
           </div>
         </div>
