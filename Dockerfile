@@ -1,24 +1,20 @@
-# Use Node LTS
+# Use Node.js LTS
 FROM node:18
 
-# Create app directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy package manifests first (for better layer caching)
-COPY package*.json ./
+# Copy server package.json and package-lock.json
+COPY server/package*.json ./
 
-# Install dependencies (use npm ci if lockfile exists)
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# Install dependencies
+RUN npm install
 
-# Copy app source
-COPY . .
+# Copy the rest of the server code
+COPY server/. .
 
-# If you have a build step (optional), uncomment:
-# RUN npm run build
-
-# Ensure a default PORT value (app should still read process.env.PORT)
-ENV PORT=3000
+# Expose port (Render injects PORT automatically)
 EXPOSE 3000
 
-# Start the app (must match package.json "start" script)
+# Start the server (must match scripts in server/package.json)
 CMD ["npm", "start"]
