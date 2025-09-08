@@ -26,7 +26,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid, redirect to login
+      // Token expired or invalid, redirect to loginKNB NJNK
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
