@@ -1,51 +1,58 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppDataSource = void 0;
-require("reflect-metadata");
-const express_1 = __importDefault(require("express"));
-const typeorm_1 = require("typeorm");
-const cors_1 = __importDefault(require("cors"));
-const User_js_1 = require("./entities/User.js");
-const Ticket_js_1 = require("./entities/Ticket.js");
-const Comment_js_1 = require("./entities/Comment.js");
-const auth_routes_js_1 = __importDefault(require("./routes/auth.routes.js"));
-const ticket_routes_js_1 = __importDefault(require("./routes/ticket.routes.js"));
-const comment_routes_js_1 = __importDefault(require("./routes/comment.routes.js"));
+import "reflect-metadata";
+import express from "express";
+import { DataSource } from "typeorm";
+import cors from "cors";
+import dotenv from "dotenv";
+
+// Entities
+import { User } from "./entities/User";
+import { Ticket } from "./entities/Ticket";
+import { Comment } from "./entities/Comment";
+
+// Routes
+import authRoutes from "./routes/auth.routes";
+import ticketRoutes from "./routes/ticket.routes";
+import commentRoutes from "./routes/comment.routes";
+
+dotenv.config();
+
 // Create TypeORM DataSource
-exports.AppDataSource = new typeorm_1.DataSource({
-    type: "mysql",
-    host: "localhost",
-    port: 3306,
-    username: "root", // change to your MySQL username
-    password: "password", // change to your MySQL password
-    database: "helpdesk", // change to your database name
-    synchronize: true, // auto creates tables (use only in dev!)
+export const AppDataSource = new DataSource({
+    type: "postgres", // 🔥 changed from mysql → postgres
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 5432,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    synchronize: true, // only in dev; in prod use migrations
     logging: false,
-    entities: [User_js_1.User, Ticket_js_1.Ticket, Comment_js_1.Comment],
+    entities: [User, Ticket, Comment],
     migrations: [],
     subscribers: [],
 });
-const app = (0, express_1.default)();
+
+const app = express();
+
 // Middleware
-app.use((0, cors_1.default)());
-app.use(express_1.default.json());
+app.use(cors());
+app.use(express.json());
+
 // Routes
-app.use("/api/auth", auth_routes_js_1.default);
-app.use("/api/tickets", ticket_routes_js_1.default);
-app.use("/api/comments", comment_routes_js_1.default);
+app.use("/api/auth", authRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("/api/comments", commentRoutes);
+
 // Start server only after DB connection
-exports.AppDataSource.initialize()
+AppDataSource.initialize()
     .then(() => {
-    console.log("✅ Database connected successfully");
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
-})
+        console.log("✅ Database connected successfully");
+        const PORT = process.env.PORT || 5000;
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+        });
+    })
     .catch((err) => {
-    console.error("❌ Database connection failed:", err);
-});
-exports.default = app;
+        console.error("❌ Database connection failed:", err);
+    });
+
+export default app;
