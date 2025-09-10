@@ -1,7 +1,5 @@
 {
     "compilerOptions": {
-        "jsx": "react-jsx",
-        "allowSyntheticDefaultImports": true,
         "target": "ES2022",
         "module": "CommonJS",
         "moduleResolution": "Node",
