@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 
 // Entities - use correct imports
-import { User } from "../entities/user"; // Capital U
+import { User } from "entities/user"; // Capital U
 import { Ticket } from "../entities/Ticket";
 import { Comment } from "../entities/Comment";
 import { Service } from "../entities/Services";
