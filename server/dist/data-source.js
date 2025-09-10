@@ -7,7 +7,7 @@ exports.AppDataSource = void 0;
 require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const dotenv_1 = __importDefault(require("dotenv"));
-const User_1 = require("entities/User");
+const User_1 = require("./entities/User");
 const Ticket_1 = require("./entities/Ticket");
 const Comment_1 = require("./entities/Comment");
 dotenv_1.default.config();
