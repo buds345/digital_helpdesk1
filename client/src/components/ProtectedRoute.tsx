@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface User {
     id: string;
     role: string;
-    // Add other user properties as needed
 }
 
 interface ProtectedRouteProps {
@@ -14,29 +13,31 @@ interface ProtectedRouteProps {
     allowedRoles?: string[];
     adminOnly?: boolean;
     fallback?: React.ReactNode;
+    loginPath?: string; // 👈 NEW: custom login redirect
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+const ProtectedRoute = ({
     children,
     render,
     allowedRoles,
     adminOnly,
-    fallback = null
-}) => {
+    fallback = <div>Loading...</div>,
+    loginPath = "/client-login" // 👈 Default fallback login
+}: ProtectedRouteProps): ReactElement | null => {
     const { user, loading } = useAuth();
 
     // Handle loading state
     if (loading) {
-        return <>{fallback}</> || <div>Loading...</div>;
+        return <>{fallback}</>;
     }
 
     // Redirect if no user
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to={loginPath} replace />;
     }
 
     // Check admin access
-    if (adminOnly && user.role !== 'admin') {
+    if (adminOnly && user.role !== "admin") {
         return <Navigate to="/" replace />;
     }
 
@@ -52,7 +53,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         }
         return <>{children}</>;
     } catch (error) {
-        console.error('ProtectedRoute render error:', error);
+        console.error("ProtectedRoute render error:", error);
         return <Navigate to="/error" replace />;
     }
 };

@@ -4,14 +4,17 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import Layout from './components/common/Layout';
-import Login from './pages/auth/Login';
+
+// ✅ Auth pages
+import AdminLogin from './pages/AdminLogin';
+import ClientLogin from './pages/ClientLogin';
 import Register from './pages/auth/Register';
 
 // ✅ Email verification pages
 import EmailVerification from './pages/auth/EmailVerification';
 import ResendVerification from './pages/auth/ResendVerification';
 
-// ✅ NEW: Forgot Password pages
+// ✅ Forgot Password pages
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -46,14 +49,15 @@ const App: React.FC = () => (
             <Router>
                 <Routes>
                     {/* Public auth routes */}
-                    <Route path="/login" element={<Login />} />
+                    <Route path="/admin-login" element={<AdminLogin />} />
+                    <Route path="/client-login" element={<ClientLogin />} />
                     <Route path="/register" element={<Register />} />
 
-                    {/* ✅ Email verification routes */}
+                    {/* Email verification routes */}
                     <Route path="/verify-email" element={<EmailVerification />} />
                     <Route path="/resend-verification" element={<ResendVerification />} />
 
-                    {/* ✅ NEW: Forgot Password routes */}
+                    {/* Forgot Password routes */}
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
 

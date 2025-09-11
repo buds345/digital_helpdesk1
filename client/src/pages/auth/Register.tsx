@@ -46,7 +46,7 @@ const Register: React.FC = () => {
     };
 
     const handleGoToLogin = () => {
-        navigate("/login");
+        navigate("/client-login");
     };
 
     const handleResendEmail = () => {
@@ -230,7 +230,7 @@ const Register: React.FC = () => {
 
                         <Typography sx={{ mt: 2 }} align="center">
                             Already have an account?{" "}
-                            <Link href="/login" underline="hover">
+                            <Link href="/client-login" underline="hover">
                                 Login
                             </Link>
                         </Typography>

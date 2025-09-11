@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import {
     Box,
     AppBar,
@@ -13,7 +13,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Layout: React.FC = () => {
     const { user, logout, isAuthenticated, loading } = useAuth();
-    const navigate = useNavigate();
     const theme = useTheme();
 
     // ✅ Wait for auth to finish loading
@@ -25,11 +24,18 @@ const Layout: React.FC = () => {
         );
     }
 
-    // ✅ If not authenticated, redirect to login
+    // ✅ If not authenticated, redirect to login (NO infinite loop now)
+    // AdminLayout.tsx
     if (!isAuthenticated) {
-        navigate('/login');
-        return null;
+        return <Navigate to="/admin-login" replace />;
     }
+
+    // ClientLayout.tsx
+    if (!isAuthenticated) {
+        return <Navigate to="/client-login" replace />;
+    }
+
+
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -45,11 +51,13 @@ const Layout: React.FC = () => {
             >
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
-
+                        {/* You can add app name/logo here */}
                     </Typography>
-                    <Typography sx={{ mr: 2 }}>
-
-                    </Typography>
+                    {user && (
+                        <Typography sx={{ mr: 2 }}>
+                            {user.role.toUpperCase()}
+                        </Typography>
+                    )}
                     <Button color="inherit" onClick={logout} sx={{ textTransform: 'none' }}>
                         Logout
                     </Button>

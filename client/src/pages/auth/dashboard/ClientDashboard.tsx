@@ -19,9 +19,13 @@ import {
     CardContent,
     Paper,
     Chip,
+
+    Tooltip,
+    Table,
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
+
 
 import { Ticket, TicketCreate } from '../../../types/ticket.types';
 import { getTickets, createTicket } from '../../../api/ticket.api';
@@ -70,28 +74,9 @@ const StatsCard = styled(Card)(({ theme }) => ({
     },
 }));
 
-const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
-    border: 'none',
-    borderRadius: 16,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-    '& .MuiDataGrid-main': {
-        borderRadius: 16,
-    },
-    '& .MuiDataGrid-columnHeaders': {
-        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-        borderRadius: '16px 16px 0 0',
-        border: 'none',
-    },
-    '& .MuiDataGrid-cell': {
+const StyledTable = styled(Table)(({ theme }) => ({
+    '& .MuiTableCell-root': {
         borderColor: 'rgba(0,0,0,0.05)',
-    },
-    '& .MuiDataGrid-row': {
-        '&:nth-of-type(even)': {
-            backgroundColor: 'rgba(102, 126, 234, 0.02)',
-        },
-        '&:hover': {
-            backgroundColor: 'rgba(102, 126, 234, 0.05)',
-        },
     },
 }));
 
@@ -109,8 +94,20 @@ const GradientButton = styled(Button)(({ theme }) => ({
     },
 }));
 
+const LogoutButton = styled(Button)(({ theme }) => ({
+    background: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    color: 'white',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        background: 'rgba(255,255,255,0.3)',
+        transform: 'translateY(-2px)',
+    },
+}));
+
 const ClientDashboard: React.FC = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth(); // Assuming logout function exists in AuthContext
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [stats, setStats] = useState<Stats>({ open: 0, inProgress: 0, resolved: 0, closed: 0 });
     const [loading, setLoading] = useState(true);
@@ -124,6 +121,21 @@ const ClientDashboard: React.FC = () => {
         description: '',
         serviceId: services[0].id,
     });
+
+    const handleLogout = () => {
+        // If logout function exists in context, use it
+        if (logout) {
+            logout();
+        } else {
+            // Fallback: clear local storage and redirect
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            sessionStorage.clear();
+        }
+
+        // Redirect to login page
+        window.location.href = '/client-login';
+    };
 
     const fetchTickets = async () => {
         setLoading(true);
@@ -375,19 +387,26 @@ const ClientDashboard: React.FC = () => {
                                 Submit tickets and track their progress
                             </Typography>
                         </Box>
-                        <GradientButton
-                            onClick={() => setCreateDialogOpen(true)}
-                            sx={{
-                                background: 'rgba(255,255,255,0.2)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                '&:hover': {
-                                    background: 'rgba(255,255,255,0.3)',
-                                }
-                            }}
-                        >
-                            Create Ticket
-                        </GradientButton>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                            <GradientButton
+                                onClick={() => setCreateDialogOpen(true)}
+                                sx={{
+                                    background: 'rgba(255,255,255,0.2)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                    '&:hover': {
+                                        background: 'rgba(255,255,255,0.3)',
+                                    }
+                                }}
+                            >
+                                Create Ticket
+                            </GradientButton>
+                            <Tooltip title="Logout">
+                                <LogoutButton onClick={handleLogout}>
+                                    Logout
+                                </LogoutButton>
+                            </Tooltip>
+                        </Box>
                     </Box>
                 </GradientCard>
 
@@ -464,7 +483,7 @@ const ClientDashboard: React.FC = () => {
                     </Typography>
                 </Box>
                 <Box sx={{ height: 500, p: 2 }}>
-                    <StyledDataGrid
+                    <DataGrid
                         rows={tickets}
                         columns={columns}
                         getRowId={(row) => row.id}
