@@ -457,7 +457,7 @@ const SupportStaffDashboard: React.FC = () => {
                         </Typography>
                     </Box>
                     <CreateTicketButton onClick={() => setOpenDialog(true)}>
-                        Create Ticket
+                        Accept Ticket
                     </CreateTicketButton>
                 </Box>
 
@@ -638,7 +638,7 @@ const SupportStaffDashboard: React.FC = () => {
                         variant="contained"
                         disabled={!newTicket.title?.trim() || !newTicket.description?.trim()}
                     >
-                        Create Ticket
+                        Accept Ticket
                     </Button>
                 </DialogActions>
             </Dialog>

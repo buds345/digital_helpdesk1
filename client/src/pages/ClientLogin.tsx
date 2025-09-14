@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useAuth } from "../contexts/AuthContext";
 import AuthBackground from '../components/auth/AuthBackground';
+import logo from '../assets/images/logo.png'; // ✅ Correct import
 
 const ClientLogin: React.FC = () => {
     const navigate = useNavigate();
@@ -46,30 +47,24 @@ const ClientLogin: React.FC = () => {
 
     return (
         <AuthBackground>
-            {/* Company Title */}
+            {/* Company Logo */}
             <Box sx={{ mb: 3, textAlign: 'center' }}>
-                <Typography
-                    variant="h3"
-                    component="h1"
-                    sx={{
-                        fontWeight: 'bold',
-                        background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        letterSpacing: '0.5px',
-                        mb: 1
+                <img
+                    src={logo} // ✅ Use imported logo
+                    alt="Company Logo"
+                    style={{
+                        maxWidth: '200px',
+                        height: 'auto',
+                        marginBottom: '16px',
+                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
                     }}
-                >
-                    SM SOLUTIONS
-                </Typography>
+                />
                 <Typography
                     variant="subtitle1"
                     color="text.secondary"
                     sx={{ fontStyle: 'italic' }}
                 >
-                    Client Portal
+
                 </Typography>
             </Box>
 
